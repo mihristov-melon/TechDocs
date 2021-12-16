@@ -20,14 +20,11 @@ namespace FundAppsScripts.Scripts
             var baseUrl = _adapptrConfig.BaseUrl;
             var username = _adapptrConfig.Username;
             var password = _adapptrConfig.Password;
-            // your FundApps environment name
-            var clientEnvironmentSubDomain = "";
+            var clientEnvironmentSubDomain = "demo-melon";
 
-            //data providers ids can be obtained from a GET /rest/api/v1/dataproviders. You will need to fill Id with the value of the data vendor you are using
+            //data providers ids can be obtained from a GET /rest/api/v1/nomenclatures
             var refinitivId = _adapptrConfig.RefinitivConfig.Id;
-            // set your username
             var refinitivUsername = _adapptrConfig.RefinitivConfig.Username;
-            // set your password
             var refinitivPassword = _adapptrConfig.RefinitivConfig.Password;
 
             //Example using RestSharp (https://github.com/restsharp/RestSharp)
@@ -39,7 +36,7 @@ namespace FundAppsScripts.Scripts
             };
 
             // make the HTTP POST request with the market data provider id as route parameter
-            var request = new RestRequest($"/rest/api/v1/dataproviders/{refinitivId}/credentials", Method.POST);
+            var request = new RestRequest($"/rest/api/v1/configuration/dataproviders/{refinitivId}/credentials", Method.POST);
 
             // add json body to the request
             request.AddJsonBody(new
