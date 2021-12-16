@@ -13,12 +13,12 @@ namespace FundAppsScripts.Scripts
             var baseUrl = _adapptrConfig.BaseUrl;
             var username = _adapptrConfig.Username;
             var password = _adapptrConfig.Password;
-            // your FundApps environment name
-            var clientEnvironmentSubDomain = "";
-            // csv file only
-            var pathToFile = "";
-            // the snapshot date of your positions in the format yyyy-MM-dd
+            var clientEnvironmentSubDomain = "demo-melon";
+            var pathToFile = "Data/Adapptr_Import.csv";
             var snapshotDate = DateTime.Today.ToString("yyyy-MM-dd");
+            var services = 2;
+            var primaryIdentifier = 1;
+            var excludeErroredAssets = false;
 
             //Example using RestSharp (https://github.com/restsharp/RestSharp)
 
@@ -31,16 +31,19 @@ namespace FundAppsScripts.Scripts
             // make the HTTP POST request
             var request = new RestRequest($"/rest/api/v1/task/positions", Method.POST);
 
+            request.AddHeader("Content-Type", "multipart/form-data");
+            request.AddHeader("X-Client-Environment", clientEnvironmentSubDomain);
+
             // add body params to the request
             request.AddFile("positions", pathToFile, "text/csv");
-            request.AddParameter("snapshotDate", snapshotDate, ParameterType.RequestBody);
-
-            // add header with the rapptr environment
-            request.AddHeader("X-Client-Environment", clientEnvironmentSubDomain);
+            request.AddParameter("snapshotDate", snapshotDate);
+            request.AddParameter("services", services);
+            request.AddParameter("primaryIdentifier", primaryIdentifier);
+            request.AddParameter("excludeErroredAssets", excludeErroredAssets);
 
             var response = client.Execute<TaskProfileResponse>(request);
 
-            // if response comes back with a 200 status, then as task for the positions file was created successfully
+            // if response comes back with a 200 status, then a task for the positions file was created successfully
             if ((response.StatusCode != HttpStatusCode.OK) && (response.StatusCode != HttpStatusCode.Accepted))
             {
                 throw new Exception("Failed to send file. Received a HTTP " + (int)response.StatusCode + " " + response.StatusCode + " instead of HTTP 200 OK");
