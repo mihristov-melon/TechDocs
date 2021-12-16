@@ -8,27 +8,17 @@ namespace FundAppsScripts.Scripts
 {
     public partial class AdapptrScripts
     {
-        readonly AdapptrConfig _adapptrConfig;
-
-        public AdapptrScripts(AdapptrConfig adapptrConfig)
-        {
-            _adapptrConfig = adapptrConfig;
-        }
-
-        public void PostDataPrividerCredentials()
+        public string UploadPositions()
         {
             var baseUrl = _adapptrConfig.BaseUrl;
             var username = _adapptrConfig.Username;
             var password = _adapptrConfig.Password;
-            // your FundApps environment name
-            var clientEnvironmentSubDomain = "";
-
-            //data providers ids can be obtained from a GET /rest/api/v1/dataproviders. You will need to fill Id with the value of the data vendor you are using
-            var refinitivId = _adapptrConfig.RefinitivConfig.Id;
-            // set your username
-            var refinitivUsername = _adapptrConfig.RefinitivConfig.Username;
-            // set your password
-            var refinitivPassword = _adapptrConfig.RefinitivConfig.Password;
+            var clientEnvironmentSubDomain = "demo-melon";
+            var pathToFile = "Data/Adapptr_Import.csv";
+            var snapshotDate = DateTime.Today.ToString("yyyy-MM-dd");
+            var services = 2;
+            var primaryIdentifier = 1;
+            var excludeErroredAssets = false;
 
             //Example using RestSharp (https://github.com/restsharp/RestSharp)
 
@@ -38,27 +28,30 @@ namespace FundAppsScripts.Scripts
                 Authenticator = new HttpBasicAuthenticator(username, password)
             };
 
-            // make the HTTP POST request with the market data provider id as route parameter
-            var request = new RestRequest($"/rest/api/v1/dataproviders/{refinitivId}/credentials", Method.POST);
+            // make the HTTP POST request
+            var request = new RestRequest($"/rest/api/v1/task/positions", Method.POST);
 
-            // add json body to the request
-            request.AddJsonBody(new
-            {
-                Username = refinitivUsername,
-                Password = refinitivPassword
-            });
-
-            // add header with the rapptr environment
+            request.AddHeader("Content-Type", "multipart/form-data");
             request.AddHeader("X-Client-Environment", clientEnvironmentSubDomain);
 
-            var response = client.Execute(request);
+            // add body params to the request
+            request.AddFile("positions", pathToFile, "text/csv");
+            request.AddParameter("snapshotDate", snapshotDate);
+            request.AddParameter("services", services);
+            request.AddParameter("primaryIdentifier", primaryIdentifier);
+            request.AddParameter("excludeErroredAssets", excludeErroredAssets);
 
-            // if response comes back with a 200 status, then credentials were received successfully
-            if ((response.StatusCode != HttpStatusCode.OK))
+            var response = client.Execute<TaskProfileResponse>(request);
+
+            // if response comes back with a 200 status, then a task for the positions file was created successfully
+            if ((response.StatusCode != HttpStatusCode.OK) && (response.StatusCode != HttpStatusCode.Accepted))
             {
                 throw new Exception("Failed to send file. Received a HTTP " + (int)response.StatusCode + " " + response.StatusCode + " instead of HTTP 200 OK");
             }
 
+            var taskId = response.Data.Id;
+
+            return taskId;
             // success
         }
     }
